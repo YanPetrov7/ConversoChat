@@ -19,6 +19,7 @@
   "homepage": "https://github.com/YanPetrov7/ConversoChat#readme",
   "dependencies": {
     "express": "^4.18.2",
+    "express-session": "^1.17.3",
     "http": "^0.0.1-security"
   }
 }
