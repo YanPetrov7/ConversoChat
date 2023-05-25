@@ -21,4 +21,11 @@ const logMessage = (logType, message, type) => {
   }
 };
 
-module.exports = {logMessage};
+const generateChatTableName = (firstUsername, secondUsername) => {
+  const sortedUsers = [firstUsername, secondUsername].sort(); // Сортировка имен пользователей по алфавиту
+  const tableName = `chat_for_${sortedUsers[0]}_${sortedUsers[1]}_users`; // Создание названия таблицы
+  console.log(tableName);
+  return tableName;
+};
+
+module.exports = {logMessage, generateChatTableName};
