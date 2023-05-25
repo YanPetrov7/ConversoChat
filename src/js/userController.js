@@ -101,3 +101,12 @@ exports.registerUser = async (req, res) => {
     return res.send(errorMessage);
   }
 };
+
+exports.logoutUser = (req, res) => {
+  const username = req.session.username;
+  req.session.loggedin = false;
+  req.session.username = null;
+  const infoMessage = `Log out user with name: '${username}'`;
+  logMessage(logType, infoMessage, 'success'); // Logging succsessful login message
+  return res.redirect('/');
+};
