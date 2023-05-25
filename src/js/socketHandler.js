@@ -130,6 +130,18 @@ const handleSocketConnection = async (ws) => {
         receiverUser.ws.send(JSON.stringify([senderMessage])); // Sending the message to the receiver WebSocket client
       }
     }
+
+    // Event listener for the 'close' event of the WebSocket, invoked when the WebSocket connection is closed
+    ws.on('close', () => {
+      const sessionIndex = sessions.findIndex(
+        (item) => item.sender === data.sender && item.receiver === data.receiver
+      );
+      if (sessionIndex !== -1) {
+        sessions.splice(sessionIndex, 1); // Removing the session from the sessions array
+        const infoMessage = `Session of the sender '${data.sender}' with the recipient '${data.receiver}' was closed`;
+        logMessage(logType, infoMessage, 'success'); // Logging the session closing message
+      }
+    });
   })
 }
 
