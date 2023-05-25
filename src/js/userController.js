@@ -40,6 +40,39 @@ exports.getHomePage = (req, res) => {
   }
 };
 
+exports.loginUser = async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.send('Please enter both Username and Password!');
+  }
+
+  try {
+    const user = await User.findOne({ where: { username } }); // Finding the user by username
+    if (!user) {  // If user does not exist
+      const errorMessage = `No user with name: '${username}'`;
+      logMessage(logType, errorMessage, 'error');
+      return res.send(errorMessage);
+    }
+
+    const result = await bcrypt.compare(password, user.password);
+    if (result) { // If password matches
+      req.session.loggedin = true;
+      req.session.username = username;
+      const infoMessage = `User with username: '${username}' is logging in`;
+      logMessage(logType, infoMessage, 'success'); // Logging succsessful login message
+      return res.redirect(`/home?user=${username}`);
+    } else {
+      const errorMessage = `Invalid password for User: '${username}' `;
+      logMessage(logType, errorMessage, 'error'); // Logging error, invalid password message
+      return res.send(errorMessage);
+    }
+  } catch (err) {
+    const errorMessage = `Error occurred while logging in: ${err.message}`;
+    logMessage(logType, errorMessage, 'error'); // Logging error while logging in
+    return res.send(errorMessage);
+  }
+};
+
 exports.registerUser = async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) { // If username or password is missing
