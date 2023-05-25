@@ -19,6 +19,11 @@ exports.getRegisterPage = (req, res) => {
   return res.sendFile(filePath);
 };
 
+exports.getHomePage = (req, res) => {
+  const filePath = path.join(__dirname, '../pages/home.html');
+  return res.sendFile(filePath);
+};
+
 exports.registerUser = async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {

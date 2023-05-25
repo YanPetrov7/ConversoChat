@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html manifest="/manifest.appcache">
+  <head>
+    <title>Converso Chat</title>
+    <link rel="stylesheet" href="/style.css" type="text/css" />
+  </head>
+  <body>
+    <!-- Page structure -->
+    <h1 id="pageTitle">Chat</h1>
+    <div id="contacts-title">Contacts:</div>
+    <div id="contacts"></div>
+    <h2 id="dialogTitle">Dialog with:</h2>
+    <div id="chat"></div>
+    
+    <!-- Input field and button for sending messages -->
+    <input type="text" id="msg" />
+    <button type="submit" onclick="sendMessage()">Send</button>
+    
+    <!-- Container for displaying messages -->
+    <ul id="messageList"></ul>
+  </body>
+</html>
