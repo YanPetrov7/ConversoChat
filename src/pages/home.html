@@ -49,6 +49,7 @@
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
+        console.log(data)
         
         // Check if the received data is empty
         if (data.length === 0) {
@@ -87,8 +88,20 @@
           });
         }
 
+        if (typeof firstItem === 'object') {
+          // Handle history items
+          if (firstItem.hasOwnProperty('history')) {
+            data.forEach((item) => {
+              const listItem = document.createElement('li');
+              listItem.innerText = `${item.sender}: ${item.history}`;
+              messageList.appendChild(listItem);
+            });
+          }
+        }
+
         // Function to open a dialog with a selected contact
         const openDialog = (selectedContact, dialogName) => {
+          const parentChatDiv = document.getElementById('chat');
           // Clear the message list
           messageList.innerHTML = '';
           
@@ -96,7 +109,6 @@
           currentDialog = selectedContact;
           document.getElementById('chat').innerHTML = '';
           
-          const parentChatDiv = document.createElement('div');
           const chatDiv = createDivInOtherDiv(parentChatDiv, selectedContact, dialogName);
           document.getElementById('chat').appendChild(chatDiv);
           
