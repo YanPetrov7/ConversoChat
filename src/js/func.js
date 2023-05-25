@@ -18,8 +18,6 @@ const logMessage = (logType, message, type) => {
   }
   if (type === 'error') {
     console.log(`${colors.error} Error: ${logType}: ${message} | ${getCurrentTime()}${colors.default}`);
-  } else {
-    console.log(message);
   }
 };
 
