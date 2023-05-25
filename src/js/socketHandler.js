@@ -1,9 +1,11 @@
 const {User} = require('../../models');
 const db = require('../../models');
 const {DataTypes} = require('sequelize');
+const WebSocket = require('ws');
 const {logMessage, generateChatTableName} = require('./func.js');
 
 const logType = 'WEBSOCKET';
+const sessions = [];
 
 const defineTable = (tableName) => {
   return db.sequelize.define(tableName, {
@@ -42,6 +44,22 @@ const handleSocketConnection = async (ws) => {
   ws.on('message', async (message) => {
     const data = JSON.parse(message);
     const tableName = generateChatTableName(data.sender, data.receiver); // Generating the table name for the chat
+    const existingSession = sessions.find(
+      (session) =>
+        session.sender === data.sender && session.receiver === data.receiver
+    );
+
+    // If no session for this dialog
+    if (existingSession === undefined) {
+      const newUser = {
+        sender: data.sender,
+        receiver: data.receiver,
+        ws: ws,
+      };
+      sessions.push(newUser); // Adding the new user session to the sessions array
+      const infoMessage = `Session with sender: '${data.sender}' and receiver: '${data.receiver}' created`;
+      logMessage(logType, infoMessage, 'success'); // Logging the session creation message
+    }
 
     // If user sends info about current dialog
     if (!data.message) {
@@ -76,6 +94,54 @@ const handleSocketConnection = async (ws) => {
         }
       }
     }
+
+    // If user sends message
+    if (data.message) {
+      const DialogTable = defineTable(tableName);
+      try {
+        await DialogTable.create({
+          sender: data.sender,
+          receiver: data.receiver,
+          message: data.message,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }); // Creating a new record in the chat table for the sent message
+        const infoMessage = `Send message from ${data.sender} to ${data.receiver}`;
+        logMessage(logType, infoMessage, 'success'); // Logging sending message
+      } catch (error) {
+        const errorMessage = `Error creating record: ${error}`;
+        logMessage(logType, errorMessage, 'error'); // Logging the error message
+      }
+    }
+
+    // Send data to receiver if he online
+    const receiverUser = sessions.find(
+      (item) => item.sender === data.receiver && item.receiver === data.sender
+    );
+    if (
+      receiverUser !== undefined &&
+      receiverUser.ws.readyState === WebSocket.OPEN
+    ) {
+      const senderMessage = {
+        message: data.message,
+        sender: data.sender,
+      };
+      if (senderMessage.message) {
+        receiverUser.ws.send(JSON.stringify([senderMessage])); // Sending the message to the receiver WebSocket client
+      }
+    }
+
+    // Event listener for the 'close' event of the WebSocket, invoked when the WebSocket connection is closed
+    ws.on('close', () => {
+      const sessionIndex = sessions.findIndex(
+        (item) => item.sender === data.sender && item.receiver === data.receiver
+      );
+      if (sessionIndex !== -1) {
+        sessions.splice(sessionIndex, 1); // Removing the session from the sessions array
+        const infoMessage = `Session of the sender '${data.sender}' with the recipient '${data.receiver}' was closed`;
+        logMessage(logType, infoMessage, 'success'); // Logging the session closing message
+      }
+    });
   })
 }
 
