@@ -20,5 +20,15 @@
     <ul id="messageList"></ul>
 
     <a href="/logout">Logout</a>
+    <script>
+      // WebSocket URL
+      const wsUrl = 'ws://localhost:3000';
+      
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('WebSocket connection established');
+      };
+    </script>
   </body>
 </html>
