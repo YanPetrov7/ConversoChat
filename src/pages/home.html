@@ -53,10 +53,11 @@
           data.forEach((item) => {
             // If button of current user
             if (item === sender) {
+              const dialogName = 'Saved Messages';
               savedMessagesButton = document.createElement('button');
-              savedMessagesButton.innerText = 'Saved Messages';
+              savedMessagesButton.innerText = dialogName;
               savedMessagesButton.addEventListener('click', () => {
-                openDialog(item);
+                openDialog(item, dialogName);
               });
             } else {
               const buttonItem = document.createElement('button');
@@ -72,6 +73,38 @@
             contactsElem.appendChild(buttonItem);
           });
         }
+
+        // Function to create a chat div for a contact
+        const createChatDiv = (contact, dialogName) => {
+          const chatDiv = document.createElement('div');
+          chatDiv.id = `chat_${contact}`;
+          if(dialogName){
+            chatDiv.innerHTML = `<h2>${dialogName}</h2>`;
+            return chatDiv;
+          }
+          chatDiv.innerHTML = `<h2>${contact}</h2>`;
+          return chatDiv;
+        };
+
+        // Function to open a dialog with a selected contact
+        const openDialog = (selectedContact, dialogName) => {
+          // Clear the message list
+          messageList.innerHTML = '';
+          
+          // Update the current dialog and chat section
+          currentDialog = selectedContact;
+          document.getElementById('chat').innerHTML = '';
+          
+          const chatDiv = createChatDiv(selectedContact, dialogName);
+          document.getElementById('chat').appendChild(chatDiv);
+          
+          receiver = selectedContact;
+          
+          // Send a request to the WebSocket server to open the dialog
+          const data = { sender: sender, receiver: selectedContact };
+          ws.send(JSON.stringify(data));
+          console.log(`Dialog between ${data.sender} and ${data.receiver} opened!`);
+        };
       }
 
     </script>
