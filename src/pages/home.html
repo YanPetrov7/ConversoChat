@@ -49,7 +49,6 @@
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log(data)
         
         // Check if the received data is empty
         if (data.length === 0) {
@@ -120,7 +119,26 @@
           console.log(`Dialog between ${data.sender} and ${data.receiver} opened!`);
         };
       }
-
+      // Function to send a message
+      const sendMessage = () => {
+        const message = document.getElementById('msg').value;
+        
+        // Check if there is a message and receiver specified
+        if (message && receiver) {
+          const listItem = document.createElement('li');
+          listItem.innerText = `${sender}: ${message}`;
+          messageList.appendChild(listItem);
+          
+          // Send the message to the WebSocket server
+          const data = { sender, message, receiver };
+          ws.send(JSON.stringify(data));
+          console.log(`message: ${message}, receiver: ${receiver}, sender: ${sender}`);
+        } else {
+          const error = 'Error: There is no message or receiver';
+          alert(message);
+          console.log(message)
+        }
+      };
     </script>
   </body>
 </html>

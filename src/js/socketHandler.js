@@ -76,6 +76,25 @@ const handleSocketConnection = async (ws) => {
         }
       }
     }
+
+    // If user sends message
+    if (data.message) {
+      const DialogTable = defineTable(tableName);
+      try {
+        await DialogTable.create({
+          sender: data.sender,
+          receiver: data.receiver,
+          message: data.message,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }); // Creating a new record in the chat table for the sent message
+        const infoMessage = `Send message from ${data.sender} to ${data.receiver}`;
+        logMessage(logType, infoMessage, 'success'); // Logging sending message
+      } catch (error) {
+        const errorMessage = `Error creating record: ${error}`;
+        logMessage(logType, errorMessage, 'error'); // Logging the error message
+      }
+    }
   })
 }
 
