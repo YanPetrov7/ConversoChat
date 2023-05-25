@@ -31,6 +31,10 @@
       // Variables for managing the current dialog
       let receiver;
       let currentDialog = null;
+
+      // Update the page title with the sender's name
+      const h1Element = document.getElementById('pageTitle');
+      h1Element.innerText = `${sender}'s Homepage`;
       
       // Function to create a chat div for a other div
       const createDivInOtherDiv = (parentDiv, childDivId, childDivName) => {
