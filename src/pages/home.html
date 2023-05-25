@@ -18,5 +18,109 @@
     
     <!-- Container for displaying messages -->
     <ul id="messageList"></ul>
+
+    <a href="/logout">Logout</a>
+    <script>
+      // Retrieve URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      // Get the 'sender' from URL parameters
+      const sender = urlParams.get('user');
+      // WebSocket URL
+      const wsUrl = 'ws://localhost:3000';
+      
+      // Function to create a chat div for a other div
+      const createDivInOtherDiv = (parentDiv, childDivId, childDivName) => {
+          const childDiv = document.createElement('div');
+          childDiv.id = `chat_${childDivId}`;
+          if(childDivName){
+            childDiv.innerHTML = `<h2>${childDivName}</h2>`;
+            return childDiv;
+          }
+          // If there is no div name, use id instead
+          childDiv.innerHTML = `<h2>${childDivId}</h2>`;
+          return childDiv;
+      };
+
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('WebSocket connection established');
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log(data)
+        
+        // Check if the received data is empty
+        if (data.length === 0) {
+          return;
+        }
+        
+        const firstItem = data[0];
+
+        if (typeof firstItem === 'string') {
+          const contactsElem = document.getElementById('contacts'); // Update the contacts list
+          contactsElem.innerHTML = '';
+          const contacts = [];
+          let savedMessagesButton;
+          
+          data.forEach((item) => {
+            // If button of current user
+            if (item === sender) {
+              const dialogName = 'Saved Messages';
+              savedMessagesButton = document.createElement('button');
+              savedMessagesButton.innerText = dialogName;
+              savedMessagesButton.addEventListener('click', () => {
+                openDialog(item, dialogName);
+              });
+            } else {
+              const buttonItem = document.createElement('button');
+              buttonItem.innerText = `${item}`;
+              buttonItem.addEventListener('click', () => {
+                openDialog(item);
+              });
+              contacts.push(buttonItem);
+            }
+          });
+          contacts.unshift(savedMessagesButton);
+          contacts.forEach((buttonItem) => {
+            contactsElem.appendChild(buttonItem);
+          });
+        }
+
+        if (typeof firstItem === 'object') {
+          // Handle history items
+          if (firstItem.hasOwnProperty('history')) {
+            data.forEach((item) => {
+              const listItem = document.createElement('li');
+              listItem.innerText = `${item.sender}: ${item.history}`;
+              messageList.appendChild(listItem);
+            });
+          }
+        }
+
+        // Function to open a dialog with a selected contact
+        const openDialog = (selectedContact, dialogName) => {
+          const parentChatDiv = document.getElementById('chat');
+          // Clear the message list
+          messageList.innerHTML = '';
+          
+          // Update the current dialog and chat section
+          currentDialog = selectedContact;
+          document.getElementById('chat').innerHTML = '';
+          
+          const chatDiv = createDivInOtherDiv(parentChatDiv, selectedContact, dialogName);
+          document.getElementById('chat').appendChild(chatDiv);
+          
+          receiver = selectedContact;
+          
+          // Send a request to the WebSocket server to open the dialog
+          const data = { sender: sender, receiver: selectedContact };
+          ws.send(JSON.stringify(data));
+          console.log(`Dialog between ${data.sender} and ${data.receiver} opened!`);
+        };
+      }
+
+    </script>
   </body>
 </html>
