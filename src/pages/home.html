@@ -27,6 +27,10 @@
       const sender = urlParams.get('user');
       // WebSocket URL
       const wsUrl = 'ws://localhost:3000';
+
+      // Variables for managing the current dialog
+      let receiver;
+      let currentDialog = null;
       
       // Function to create a chat div for a other div
       const createDivInOtherDiv = (parentDiv, childDivId, childDivName) => {
@@ -93,6 +97,18 @@
             data.forEach((item) => {
               const listItem = document.createElement('li');
               listItem.innerText = `${item.sender}: ${item.history}`;
+              messageList.appendChild(listItem);
+            });
+          }
+          // Handle messages from WebSocket session
+          if (firstItem.hasOwnProperty('message')) {
+            // Check if the message belongs to the current dialog
+            if (firstItem.sender !== currentDialog) {
+              return;
+            }
+            data.forEach((item) => {
+              const listItem = document.createElement('li');
+              listItem.innerText = `${item.sender}: ${item.message}`;
               messageList.appendChild(listItem);
             });
           }

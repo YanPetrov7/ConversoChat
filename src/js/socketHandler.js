@@ -5,6 +5,7 @@ const WebSocket = require('ws');
 const {logMessage, generateChatTableName} = require('./func.js');
 
 const logType = 'WEBSOCKET';
+const sessions = [];
 
 const defineTable = (tableName) => {
   return db.sequelize.define(tableName, {
@@ -59,7 +60,7 @@ const handleSocketConnection = async (ws) => {
       const infoMessage = `Session with sender: '${data.sender}' and receiver: '${data.receiver}' created`;
       logMessage(logType, infoMessage, 'success'); // Logging the session creation message
     }
-    
+
     // If user sends info about current dialog
     if (!data.message) {
       const tables = await db.sequelize.queryInterface.showAllSchemas(); // Fetching all tables in the database
@@ -110,6 +111,23 @@ const handleSocketConnection = async (ws) => {
       } catch (error) {
         const errorMessage = `Error creating record: ${error}`;
         logMessage(logType, errorMessage, 'error'); // Logging the error message
+      }
+    }
+
+    // Send data to receiver if he online
+    const receiverUser = sessions.find(
+      (item) => item.sender === data.receiver && item.receiver === data.sender
+    );
+    if (
+      receiverUser !== undefined &&
+      receiverUser.ws.readyState === WebSocket.OPEN
+    ) {
+      const senderMessage = {
+        message: data.message,
+        sender: data.sender,
+      };
+      if (senderMessage.message) {
+        receiverUser.ws.send(JSON.stringify([senderMessage])); // Sending the message to the receiver WebSocket client
       }
     }
   })
