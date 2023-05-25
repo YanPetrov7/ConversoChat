@@ -1,6 +1,7 @@
 const {User} = require('../../models');
 const db = require('../../models');
 const {DataTypes} = require('sequelize');
+const WebSocket = require('ws');
 const {logMessage, generateChatTableName} = require('./func.js');
 
 const logType = 'WEBSOCKET';
@@ -42,7 +43,23 @@ const handleSocketConnection = async (ws) => {
   ws.on('message', async (message) => {
     const data = JSON.parse(message);
     const tableName = generateChatTableName(data.sender, data.receiver); // Generating the table name for the chat
+    const existingSession = sessions.find(
+      (session) =>
+        session.sender === data.sender && session.receiver === data.receiver
+    );
 
+    // If no session for this dialog
+    if (existingSession === undefined) {
+      const newUser = {
+        sender: data.sender,
+        receiver: data.receiver,
+        ws: ws,
+      };
+      sessions.push(newUser); // Adding the new user session to the sessions array
+      const infoMessage = `Session with sender: '${data.sender}' and receiver: '${data.receiver}' created`;
+      logMessage(logType, infoMessage, 'success'); // Logging the session creation message
+    }
+    
     // If user sends info about current dialog
     if (!data.message) {
       const tables = await db.sequelize.queryInterface.showAllSchemas(); // Fetching all tables in the database
