@@ -21,14 +21,59 @@
 
     <a href="/logout">Logout</a>
     <script>
+      // Retrieve URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      // Get the 'sender' from URL parameters
+      const sender = urlParams.get('user');
       // WebSocket URL
       const wsUrl = 'ws://localhost:3000';
-      
+
       const ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
         console.log('WebSocket connection established');
       };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        // Check if the received data is empty
+        if (data.length === 0) {
+          return;
+        }
+        
+        const firstItem = data[0];
+
+        if (typeof firstItem === 'string') {
+          const contactsElem = document.getElementById('contacts'); // Update the contacts list
+          contactsElem.innerHTML = '';
+          const contacts = [];
+          let savedMessagesButton;
+          
+          data.forEach((item) => {
+            // If button of current user
+            if (item === sender) {
+              savedMessagesButton = document.createElement('button');
+              savedMessagesButton.innerText = 'Saved Messages';
+              savedMessagesButton.addEventListener('click', () => {
+                openDialog(item);
+              });
+            } else {
+              const buttonItem = document.createElement('button');
+              buttonItem.innerText = `${item}`;
+              buttonItem.addEventListener('click', () => {
+                openDialog(item);
+              });
+              contacts.push(buttonItem);
+            }
+          });
+          contacts.unshift(savedMessagesButton);
+          contacts.forEach((buttonItem) => {
+            contactsElem.appendChild(buttonItem);
+          });
+        }
+      }
+
     </script>
   </body>
 </html>
