@@ -27,6 +27,19 @@
       const sender = urlParams.get('user');
       // WebSocket URL
       const wsUrl = 'ws://localhost:3000';
+      
+      // Function to create a chat div for a other div
+      const createDivInOtherDiv = (parentDiv, childDivId, childDivName) => {
+          const childDiv = document.createElement('div');
+          childDiv.id = `chat_${childDivId}`;
+          if(childDivName){
+            childDiv.innerHTML = `<h2>${childDivName}</h2>`;
+            return childDiv;
+          }
+          // If there is no div name, use id instead
+          childDiv.innerHTML = `<h2>${childDivId}</h2>`;
+          return childDiv;
+      };
 
       const ws = new WebSocket(wsUrl);
       
@@ -74,18 +87,6 @@
           });
         }
 
-        // Function to create a chat div for a contact
-        const createChatDiv = (contact, dialogName) => {
-          const chatDiv = document.createElement('div');
-          chatDiv.id = `chat_${contact}`;
-          if(dialogName){
-            chatDiv.innerHTML = `<h2>${dialogName}</h2>`;
-            return chatDiv;
-          }
-          chatDiv.innerHTML = `<h2>${contact}</h2>`;
-          return chatDiv;
-        };
-
         // Function to open a dialog with a selected contact
         const openDialog = (selectedContact, dialogName) => {
           // Clear the message list
@@ -95,7 +96,8 @@
           currentDialog = selectedContact;
           document.getElementById('chat').innerHTML = '';
           
-          const chatDiv = createChatDiv(selectedContact, dialogName);
+          const parentChatDiv = document.createElement('div');
+          const chatDiv = createDivInOtherDiv(parentChatDiv, selectedContact, dialogName);
           document.getElementById('chat').appendChild(chatDiv);
           
           receiver = selectedContact;
