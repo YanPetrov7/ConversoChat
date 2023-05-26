@@ -7,8 +7,11 @@
   <body>
     <!-- Page structure -->
     <h1 id="pageTitle">Chat</h1>
-    <div id="contacts-title">Contacts:</div>
-    <div id="contacts"></div>
+    <div id="contacts-title">Find user:</div>
+    <select id="userList" onchange="openDialog(this.value)">
+      <option value="" selected disabled>Select a user</option>
+    </select>
+    <input type="text" id="userSearch" oninput="searchUsers()" placeholder="Search by name">
     <h2 id="dialogTitle">Dialog with:</h2>
     <div id="chat"></div>
     
@@ -35,64 +38,39 @@
       // Update the page title with the sender's name
       const h1Element = document.getElementById('pageTitle');
       h1Element.innerText = `${sender}'s Homepage`;
-      
+
       // Function to create a chat div for a other div
       const createDivInOtherDiv = (parentDiv, childDivId, childDivName) => {
-          const childDiv = document.createElement('div');
-          childDiv.id = `chat_${childDivId}`;
-          if(childDivName){
-            childDiv.innerHTML = `<h2>${childDivName}</h2>`;
-            return childDiv;
-          }
-          // If there is no div name, use id instead
-          childDiv.innerHTML = `<h2>${childDivId}</h2>`;
+        const childDiv = document.createElement('div');
+        childDiv.id = `chat_${childDivId}`;
+        if (childDivName) {
+          childDiv.innerHTML = `<h2>${childDivName}</h2>`;
           return childDiv;
+        }
+        // If there is no div name, use id instead
+        childDiv.innerHTML = `<h2>${childDivId}</h2>`;
+        return childDiv;
       };
 
       const ws = new WebSocket(wsUrl);
-      
+
       ws.onopen = () => {
         console.log('WebSocket connection established');
       };
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        
+
         // Check if the received data is empty
         if (data.length === 0) {
           return;
         }
-        
+
         const firstItem = data[0];
 
         if (typeof firstItem === 'string') {
-          const contactsElem = document.getElementById('contacts'); // Update the contacts list
-          contactsElem.innerHTML = '';
-          const contacts = [];
-          let savedMessagesButton;
-          
-          data.forEach((item) => {
-            // If button of current user
-            if (item === sender) {
-              const dialogName = 'Saved Messages';
-              savedMessagesButton = document.createElement('button');
-              savedMessagesButton.innerText = dialogName;
-              savedMessagesButton.addEventListener('click', () => {
-                openDialog(item, dialogName);
-              });
-            } else {
-              const buttonItem = document.createElement('button');
-              buttonItem.innerText = `${item}`;
-              buttonItem.addEventListener('click', () => {
-                openDialog(item);
-              });
-              contacts.push(buttonItem);
-            }
-          });
-          contacts.unshift(savedMessagesButton);
-          contacts.forEach((buttonItem) => {
-            contactsElem.appendChild(buttonItem);
-          });
+          const contactsElem = document.getElementById('contacts-title');
+          populateUserList(data);
         }
 
         if (typeof firstItem === 'object') {
@@ -117,38 +95,39 @@
             });
           }
         }
+      };
 
-        // Function to open a dialog with a selected contact
-        const openDialog = (selectedContact, dialogName) => {
-          const parentChatDiv = document.getElementById('chat');
-          // Clear the message list
-          messageList.innerHTML = '';
-          
-          // Update the current dialog and chat section
-          currentDialog = selectedContact;
-          document.getElementById('chat').innerHTML = '';
-          
-          const chatDiv = createDivInOtherDiv(parentChatDiv, selectedContact, dialogName);
-          document.getElementById('chat').appendChild(chatDiv);
-          
-          receiver = selectedContact;
-          
-          // Send a request to the WebSocket server to open the dialog
-          const data = { sender: sender, receiver: selectedContact };
-          ws.send(JSON.stringify(data));
-          console.log(`Dialog between ${data.sender} and ${data.receiver} opened!`);
-        };
-      }
+      // Function to open a dialog with a selected contact
+      const openDialog = (selectedContact) => {
+        const parentChatDiv = document.getElementById('chat');
+        // Clear the message list
+        messageList.innerHTML = '';
+
+        // Update the current dialog and chat section
+        currentDialog = selectedContact;
+        document.getElementById('chat').innerHTML = '';
+
+        const chatDiv = createDivInOtherDiv(parentChatDiv, selectedContact);
+        document.getElementById('chat').appendChild(chatDiv);
+
+        receiver = selectedContact;
+
+        // Send a request to the WebSocket server to open the dialog
+        const data = { sender: sender, receiver: selectedContact };
+        ws.send(JSON.stringify(data));
+        console.log(`Dialog between ${data.sender} and ${data.receiver} opened!`);
+      };
+
       // Function to send a message
       const sendMessage = () => {
         const message = document.getElementById('msg').value;
-        
+
         // Check if there is a message and receiver specified
         if (message && receiver) {
           const listItem = document.createElement('li');
           listItem.innerText = `${sender}: ${message}`;
           messageList.appendChild(listItem);
-          
+
           // Send the message to the WebSocket server
           const data = { sender, message, receiver };
           ws.send(JSON.stringify(data));
@@ -156,8 +135,39 @@
         } else {
           const error = 'Error: There is no message or receiver';
           alert(message);
-          console.log(message)
+          console.log(message);
         }
+      };
+
+      // Function to search users by name
+      const searchUsers = () => {
+        const input = document.getElementById('userSearch');
+        const filter = input.value.toLowerCase();
+        const userList = document.getElementById('userList');
+        const options = userList.getElementsByTagName('option');
+
+        const optionsArray = Array.from(options);
+        optionsArray.forEach((option) => {
+          const username = option.text.toLowerCase();
+          if (username.includes(filter)) {
+            option.style.display = '';
+          } else {
+            option.style.display = 'none';
+          }
+        });
+      };
+
+      // Function to populate the user list in the dropdown
+      const populateUserList = (data) => {
+        const userList = document.getElementById('userList');
+        userList.innerHTML = '<option value="" selected disabled>Select a user</option>';
+
+        data.forEach((item) => {
+          const option = document.createElement('option');
+          option.value = item;
+          option.text = item;
+          userList.appendChild(option);
+        });
       };
     </script>
   </body>
