@@ -1,6 +1,6 @@
 const {User} = require('../../models');
 const db = require('../../models');
-const {DataTypes} = require('sequelize');
+const {DataTypes, Op} = require('sequelize');
 const WebSocket = require('ws');
 const {logMessage, generateChatTableName} = require('./func.js');
 
@@ -36,13 +36,19 @@ const defineTable = (tableName) => {
 
 // Function to handle WebSocket connection
 const handleSocketConnection = async (ws) => {
-  const users = await User.findAll();
-  const usernames = users.map((item) => item.username);
-  ws.send(JSON.stringify(usernames)); // Sending receivers to the WebSocket client
-
   // Event listener for the 'message' event of the WebSocket, invoked when a message is received
   ws.on('message', async (message) => {
     const data = JSON.parse(message);
+
+    // If client send username
+    if (typeof data === 'string') {
+      const sender = data;
+      const users = await User.findAll({ where: { username: { [Op.ne]: sender } } });
+      const usernames = users.map(user => user.username);
+      ws.send(JSON.stringify(usernames));
+      return;
+    }
+
     const tableName = generateChatTableName(data.sender, data.receiver); // Generating the table name for the chat
     const existingSession = sessions.find(
       (session) =>
