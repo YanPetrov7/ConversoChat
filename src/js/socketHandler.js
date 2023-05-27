@@ -1,6 +1,6 @@
 const {User} = require('../../models');
 const db = require('../../models');
-const {DataTypes} = require('sequelize');
+const {DataTypes, Op} = require('sequelize');
 const WebSocket = require('ws');
 const {logMessage, generateChatTableName} = require('./func.js');
 
@@ -36,13 +36,31 @@ const defineTable = (tableName) => {
 
 // Function to handle WebSocket connection
 const handleSocketConnection = async (ws) => {
-  const users = await User.findAll();
-  const usernames = users.map((item) => item.username);
-  ws.send(JSON.stringify(usernames)); // Sending receivers to the WebSocket client
-
   // Event listener for the 'message' event of the WebSocket, invoked when a message is received
   ws.on('message', async (message) => {
     const data = JSON.parse(message);
+
+    // If client send username
+    if (typeof data === 'string') {
+      try {
+        const sender = data;
+        // Send all users
+        const users = await User.findAll({ where: { username: { [Op.ne]: sender } } });
+        const usernames = users.map(user => user.username);
+        // Send user's contacts
+        const user = await User.findOne({ where: { username: sender } });
+        const userContacts = user.contacts || [];
+        ws.send(JSON.stringify({
+          users: usernames,
+          contacts: userContacts
+        }));
+        return;
+      } catch (error) {
+        const errorMessage = `Can't fetch the user data: ${error}`;
+        logMessage(logType, errorMessage, 'error'); // Logging the error message
+      }
+    }
+
     const tableName = generateChatTableName(data.sender, data.receiver); // Generating the table name for the chat
     const existingSession = sessions.find(
       (session) =>
@@ -106,6 +124,20 @@ const handleSocketConnection = async (ws) => {
           createdAt: new Date(),
           updatedAt: new Date(),
         }); // Creating a new record in the chat table for the sent message
+        // Func to add contacts to db
+        const addContact = async (sender, receiver) => {
+          const user = await User.findOne({ where: { username: sender } });
+          const userContacts = user.contacts || [];
+          if (!userContacts.includes(receiver)) {
+            userContacts.push(receiver);
+          }
+          user.contacts = userContacts;
+          await user.save();
+        };
+        // Find sender and receiver users 
+        addContact(data.sender, data.receiver);
+        addContact(data.receiver, data.sender);
+
         const infoMessage = `Send message from ${data.sender} to ${data.receiver}`;
         logMessage(logType, infoMessage, 'success'); // Logging sending message
       } catch (error) {

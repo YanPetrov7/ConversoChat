@@ -7,7 +7,9 @@
   <body>
     <!-- Page structure -->
     <h1 id="pageTitle">Chat</h1>
-    <div id="contacts-title">Find user:</div>
+    <div id="contacts-title">Your contacts:</div>
+    <div id="contacts-container"></div>
+    <div id="userList-title">Find user:</div>
     <select id="userList" onchange="openDialog(this.value)">
       <option value="" selected disabled>Select a user</option>
     </select>
@@ -56,10 +58,16 @@
 
       ws.onopen = () => {
         console.log('WebSocket connection established');
+        ws.send(JSON.stringify(sender));
       };
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
+
+        if (data.hasOwnProperty('contacts')) {
+          populateContactsList(data.contacts);
+          populateUsersList(data.users);
+        }
 
         // Check if the received data is empty
         if (data.length === 0) {
@@ -67,11 +75,6 @@
         }
 
         const firstItem = data[0];
-
-        if (typeof firstItem === 'string') {
-          const contactsElem = document.getElementById('contacts-title');
-          populateUserList(data);
-        }
 
         if (typeof firstItem === 'object') {
           // Handle history items
@@ -158,7 +161,7 @@
       };
 
       // Function to populate the user list in the dropdown
-      const populateUserList = (data) => {
+      const populateUsersList = (data) => {
         const userList = document.getElementById('userList');
         userList.innerHTML = '<option value="" selected disabled>Select a user</option>';
 
@@ -167,6 +170,19 @@
           option.value = item;
           option.text = item;
           userList.appendChild(option);
+        });
+      };
+
+      // Function to populate the contacts list with buttons
+      const populateContactsList = (data) => {
+        const contactsContainer = document.getElementById('contacts-container');
+        contactsContainer.innerHTML = ''; // Clear the container
+
+        data.forEach((item) => {
+          const button = document.createElement('button');
+          button.innerText = item;
+          button.onclick = () => openDialog(item); // On click, open dialog with contact
+          contactsContainer.appendChild(button);
         });
       };
     </script>
