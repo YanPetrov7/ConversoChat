@@ -42,11 +42,23 @@ const handleSocketConnection = async (ws) => {
 
     // If client send username
     if (typeof data === 'string') {
-      const sender = data;
-      const users = await User.findAll({ where: { username: { [Op.ne]: sender } } });
-      const usernames = users.map(user => user.username);
-      ws.send(JSON.stringify(usernames));
-      return;
+      try {
+        const sender = data;
+        // Send all users
+        const users = await User.findAll({ where: { username: { [Op.ne]: sender } } });
+        const usernames = users.map(user => user.username);
+        // Send user's contacts
+        const user = await User.findOne({ where: { username: sender } });
+        const userContacts = user.contacts || [];
+        ws.send(JSON.stringify({
+          users: usernames,
+          contacts: userContacts
+        }));
+        return;
+      } catch (error) {
+        const errorMessage = `Can't fetch the user data: ${error}`;
+        logMessage(logType, errorMessage, 'error'); // Logging the error message
+      }
     }
 
     const tableName = generateChatTableName(data.sender, data.receiver); // Generating the table name for the chat
