@@ -1,12 +1,14 @@
+'use strict';
+
 const getCurrentTime = () => {
   return new Date().toLocaleString();
 };
-  
+
 const logMessage = (logType, message, type) => {
   const colors = {
     success: '\x1b[32m', // Green
     error: '\x1b[31m', // Red
-    default: '\x1b[0m', // Default
+    default: '\x1b[0m' // Default
   };
 
   if (type === 'success') {
@@ -22,10 +24,9 @@ const logMessage = (logType, message, type) => {
 };
 
 const generateChatTableName = (firstUsername, secondUsername) => {
-  const sortedUsers = [firstUsername, secondUsername].sort(); // Сортировка имен пользователей по алфавиту
-  const tableName = `chat_for_${sortedUsers[0]}_${sortedUsers[1]}_users`; // Создание названия таблицы
-  console.log(tableName);
+  const sortedUsers = [firstUsername, secondUsername].sort(); // Sort usernames by code
+  const tableName = `chat_for_${sortedUsers[0]}_${sortedUsers[1]}_users`; // Create a table title
   return tableName;
 };
 
-module.exports = {logMessage, generateChatTableName};
+module.exports = { logMessage, generateChatTableName };
