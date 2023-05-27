@@ -5,6 +5,8 @@
   "main": "src/js/app.js",
   "scripts": {
     "start": "nodemon src/app.js",
+    "lint": "eslint ./src/js/",
+    "lint:fix": "eslint . --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -27,5 +29,10 @@
     "sequelize": "^6.31.1",
     "sequelize-cli": "^6.6.0",
     "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.41.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5"
   }
 }
