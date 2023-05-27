@@ -1,3 +1,5 @@
+'use strict';
+
 const http = require('http');
 const express = require('express');
 const session = require('express-session');
@@ -14,7 +16,7 @@ app.use(
   session({
     secret: 'secretkey',
     resave: true,
-    saveUninitialized: true,
+    saveUninitialized: true
   })
 );
 app.use(express.urlencoded({ extended: true }));

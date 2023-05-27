@@ -1,3 +1,5 @@
+'use strict';
+
 const path = require('path');
 const { User } = require('../../models');
 const bcrypt = require('bcrypt');
@@ -35,9 +37,8 @@ exports.getHomePage = (req, res) => {
   if (req.session.loggedin) {
     const filePath = path.join(__dirname, '../pages/home.html');
     return res.sendFile(filePath);
-  } else {
-    return res.redirect('/');
   }
+  return res.redirect('/');
 };
 
 exports.loginUser = async (req, res) => {
@@ -48,7 +49,7 @@ exports.loginUser = async (req, res) => {
 
   try {
     const user = await User.findOne({ where: { username } }); // Finding the user by username
-    if (!user) {  // If user does not exist
+    if (!user) { // If user does not exist
       const errorMessage = `No user with name: '${username}'`;
       logMessage(logType, errorMessage, 'error');
       return res.send(errorMessage);
@@ -61,11 +62,10 @@ exports.loginUser = async (req, res) => {
       const infoMessage = `User with username: '${username}' is logging in`;
       logMessage(logType, infoMessage, 'success'); // Logging succsessful login message
       return res.redirect(`/home?user=${username}`);
-    } else {
-      const errorMessage = `Invalid password for User: '${username}' `;
-      logMessage(logType, errorMessage, 'error'); // Logging error, invalid password message
-      return res.send(errorMessage);
     }
+    const errorMessage = `Invalid password for User: '${username}' `;
+    logMessage(logType, errorMessage, 'error'); // Logging error, invalid password message
+    return res.send(errorMessage);
   } catch (err) {
     const errorMessage = `Error occurred while logging in: ${err.message}`;
     logMessage(logType, errorMessage, 'error'); // Logging error while logging in
@@ -80,7 +80,8 @@ exports.registerUser = async (req, res) => {
   }
 
   try {
-    const existingUser = await User.findOne({ where: { username } }); // Checking if user already exists
+    // Checking if user already exists
+    const existingUser = await User.findOne({ where: { username } });
     if (existingUser) { // If user already exists
       const errorMessage = `User with username: '${username}' already exists`;
       logMessage(logType, errorMessage, 'error'); // Logging error, user already exists

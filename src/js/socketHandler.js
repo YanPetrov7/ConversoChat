@@ -1,8 +1,10 @@
-const {User} = require('../../models');
+'use strict';
+
+const { User } = require('../../models');
 const db = require('../../models');
-const {DataTypes, Op} = require('sequelize');
+const { DataTypes, Op } = require('sequelize');
 const WebSocket = require('ws');
-const {logMessage, generateChatTableName} = require('./func.js');
+const { logMessage, generateChatTableName } = require('./func.js');
 
 const logType = 'WEBSOCKET';
 const sessions = [];
@@ -11,26 +13,26 @@ const defineTable = (tableName) => {
   return db.sequelize.define(tableName, {
     sender: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false
     },
     receiver: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false
     },
     message: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false
     },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: db.Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false,
+      allowNull: false
     },
     updatedAt: {
       type: DataTypes.DATE,
       defaultValue: db.Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false,
-    },
+      allowNull: false
+    }
   });
 };
 
@@ -60,11 +62,10 @@ const handleSocketConnection = async (ws) => {
         logMessage(logType, errorMessage, 'error'); // Logging the error message
       }
     }
-
-    const tableName = generateChatTableName(data.sender, data.receiver); // Generating the table name for the chat
+    // Generating the table name for the chat
+    const tableName = generateChatTableName(data.sender, data.receiver);
     const existingSession = sessions.find(
-      (session) =>
-        session.sender === data.sender && session.receiver === data.receiver
+      (session) => session.sender === data.sender && session.receiver === data.receiver
     );
 
     // If no session for this dialog
@@ -72,7 +73,7 @@ const handleSocketConnection = async (ws) => {
       const newUser = {
         sender: data.sender,
         receiver: data.receiver,
-        ws: ws,
+        ws: ws
       };
       sessions.push(newUser); // Adding the new user session to the sessions array
       const infoMessage = `Session with sender: '${data.sender}' and receiver: '${data.receiver}' created`;
@@ -81,7 +82,8 @@ const handleSocketConnection = async (ws) => {
 
     // If user sends info about current dialog
     if (!data.message) {
-      const tables = await db.sequelize.queryInterface.showAllSchemas(); // Fetching all tables in the database
+      // Fetching all tables in the database
+      const tables = await db.sequelize.queryInterface.showAllSchemas();
       const suitableTables = tables.filter(
         (table) => table.Tables_in_converso_chat === tableName
       ); // Filtering tables based on the chat table name
@@ -103,9 +105,10 @@ const handleSocketConnection = async (ws) => {
           const dialogs = await DialogTable.findAll(); // Fetching all dialogs from the chat table
           const formattedDialogs = dialogs.map((dialog) => ({
             sender: dialog.sender,
-            history: dialog.message,
+            history: dialog.message
           })); // Formatting the dialogs
-          ws.send(JSON.stringify(formattedDialogs)); // Sending the formatted dialogs to the WebSocket client
+          // Sending the formatted dialogs to the WebSocket client
+          ws.send(JSON.stringify(formattedDialogs));
         } catch (error) {
           const errorMessage = `Error creating record: ${error}`;
           logMessage(logType, errorMessage, 'error'); // Logging the error message
@@ -122,7 +125,7 @@ const handleSocketConnection = async (ws) => {
           receiver: data.receiver,
           message: data.message,
           createdAt: new Date(),
-          updatedAt: new Date(),
+          updatedAt: new Date()
         }); // Creating a new record in the chat table for the sent message
         // Func to add contacts to db
         const addContact = async (sender, receiver) => {
@@ -134,7 +137,7 @@ const handleSocketConnection = async (ws) => {
           user.contacts = userContacts;
           await user.save();
         };
-        // Find sender and receiver users 
+        // Find sender and receiver users
         addContact(data.sender, data.receiver);
         addContact(data.receiver, data.sender);
 
@@ -151,19 +154,20 @@ const handleSocketConnection = async (ws) => {
       (item) => item.sender === data.receiver && item.receiver === data.sender
     );
     if (
-      receiverUser !== undefined &&
-      receiverUser.ws.readyState === WebSocket.OPEN
+      receiverUser !== undefined
+      && receiverUser.ws.readyState === WebSocket.OPEN
     ) {
       const senderMessage = {
         message: data.message,
-        sender: data.sender,
+        sender: data.sender
       };
       if (senderMessage.message) {
-        receiverUser.ws.send(JSON.stringify([senderMessage])); // Sending the message to the receiver WebSocket client
+        // Sending the message to the receiver WebSocket client
+        receiverUser.ws.send(JSON.stringify([senderMessage]));
       }
     }
 
-    // Event listener for the 'close' event of the WebSocket, invoked when the WebSocket connection is closed
+    // Close event of the WebSocket, invoked when the WebSocket connection is closed
     ws.on('close', () => {
       const sessionIndex = sessions.findIndex(
         (item) => item.sender === data.sender && item.receiver === data.receiver
@@ -174,7 +178,7 @@ const handleSocketConnection = async (ws) => {
         logMessage(logType, infoMessage, 'success'); // Logging the session closing message
       }
     });
-  })
-}
+  });
+};
 
 module.exports = handleSocketConnection;
