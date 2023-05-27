@@ -112,6 +112,20 @@ const handleSocketConnection = async (ws) => {
           createdAt: new Date(),
           updatedAt: new Date(),
         }); // Creating a new record in the chat table for the sent message
+        // Func to add contacts to db
+        const addContact = async (sender, receiver) => {
+          const user = await User.findOne({ where: { username: sender } });
+          const userContacts = user.contacts || [];
+          if (!userContacts.includes(receiver)) {
+            userContacts.push(receiver);
+          }
+          user.contacts = userContacts;
+          await user.save();
+        };
+        // Find sender and receiver users 
+        addContact(data.sender, data.receiver);
+        addContact(data.receiver, data.sender);
+
         const infoMessage = `Send message from ${data.sender} to ${data.receiver}`;
         logMessage(logType, infoMessage, 'success'); // Logging sending message
       } catch (error) {
