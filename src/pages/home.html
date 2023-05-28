@@ -2,9 +2,11 @@
 <html manifest="/manifest.appcache">
   <head>
     <title>Converso Chat</title>
-    <link rel="stylesheet" href="/style.css" type="text/css" />
+    <link rel="stylesheet" href="styles/style.css" type="text/css" />
   </head>
   <body>
+    <!-- Notification sound -->
+    <audio id="notificationSound" src="/sounds/notification.mp3" preload="auto"></audio>
     <!-- Page structure -->
     <h1 id="pageTitle">Chat</h1>
     <div id="contacts-title">Your contacts:</div>
@@ -87,6 +89,7 @@
           }
           // Handle messages from WebSocket session
           if (firstItem.hasOwnProperty('message')) {
+            notifyNewMessage(firstItem.sender, firstItem.message);
             // Check if the message belongs to the current dialog
             if (firstItem.sender !== currentDialog) {
               return;
@@ -185,6 +188,31 @@
           contactsContainer.appendChild(button);
         });
       };
+
+      const notifyNewMessage = (sender, message) => {
+        const notificationSound = document.getElementById('notificationSound');
+
+        // Show notification
+        if (!("Notification" in window)) {
+          console.log("This browser does not support notification");
+        } 
+
+        if (Notification.permission === "granted") {
+          new Notification(`New message from ${sender}`, { body: message });
+          notificationSound.play();
+        } 
+        
+        if (Notification.permission !== "denied") {
+          Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+              Notification.permission = permission;
+              new Notification(`New message from ${sender}`, { body: message });
+              notificationSound.play();
+            }
+          });
+        }
+      }
+
     </script>
   </body>
 </html>
