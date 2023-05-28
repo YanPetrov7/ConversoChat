@@ -36,6 +36,29 @@ const defineTable = (tableName) => {
   });
 };
 
+const createNewSession = (sender, receiver, ws) => {
+  const contactSession = sessions.find(
+    (session) => (session.sender === sender && session.receiver === receiver)
+  );
+  if (!contactSession) {
+    if (sender && receiver) {
+      const newUser = {
+        sender: sender,
+        receiver: receiver,
+        ws: ws
+      };
+      sessions.push(newUser); // Adding the new user session to the sessions array
+      const infoMessage = `Session for users: '${newUser.sender}' and '${newUser.receiver}' created`;
+      logMessage(logType, infoMessage, 'success'); // Logging the session creation message
+    } else {
+      const errorMessage = 'There are no receiver or sender for creating new session';
+      logMessage(logType, errorMessage, 'error'); // Logging the error on creation message
+    }
+  } if (contactSession) {
+    contactSession.ws = ws;
+  }
+};
+
 // Function to handle WebSocket connection
 const handleSocketConnection = async (ws) => {
   // Event listener for the 'message' event of the WebSocket, invoked when a message is received
@@ -50,22 +73,6 @@ const handleSocketConnection = async (ws) => {
       return;
     }
 
-    const existingSession = sessions.find(
-      (session) => session.sender === data.sender && session.receiver === data.receiver
-    );
-
-    // If no session for this dialog
-    if (existingSession === undefined) {
-      const newUser = {
-        sender: data.sender,
-        receiver: data.receiver,
-        ws: ws
-      };
-      sessions.push(newUser); // Adding the new user session to the sessions array
-      const infoMessage = `Session with sender: '${data.sender}' and receiver: '${data.receiver}' created`;
-      logMessage(logType, infoMessage, 'success'); // Logging the session creation message
-    }
-
     // If client send username
     if (typeof data === 'string') {
       try {
@@ -76,6 +83,10 @@ const handleSocketConnection = async (ws) => {
         // Send user's contacts
         const user = await User.findOne({ where: { username: sender } });
         const userContacts = user.contacts || [];
+        // Create Web Socket session for each contact
+        userContacts.forEach((contact) => {
+          createNewSession(sender, contact, ws);
+        });
         ws.send(JSON.stringify({
           users: usernames,
           contacts: userContacts
@@ -127,6 +138,7 @@ const handleSocketConnection = async (ws) => {
 
     // If user sends message
     if (data.message) {
+      createNewSession(data.sender, data.receiver, ws);
       const DialogTable = defineTable(tableName);
       try {
         await DialogTable.create({
@@ -160,7 +172,7 @@ const handleSocketConnection = async (ws) => {
 
     // Send data to receiver if he online
     const receiverUser = sessions.find(
-      (item) => item.sender === data.receiver && item.receiver === data.sender
+      (item) => (item.sender === data.receiver && item.receiver === data.sender)
     );
     if (
       receiverUser !== undefined
@@ -175,23 +187,23 @@ const handleSocketConnection = async (ws) => {
         receiverUser.ws.send(JSON.stringify([senderMessage]));
       }
     }
-
     // Close event of the WebSocket, invoked when the WebSocket connection is closed
     ws.on('close', () => {
-      const sessionIndex = sessions.findIndex(
-        (item) => item.sender === data.sender && item.receiver === data.receiver
-      );
-      if (sessionIndex !== -1) {
-        sessions.splice(sessionIndex, 1); // Removing the session from the sessions array
-        const infoMessage = `Session of the sender '${data.sender}' with the recipient '${data.receiver}' was closed`;
-        logMessage(logType, infoMessage, 'success'); // Logging the session closing message
+      const sessionIndexes = [];
+      sessions.forEach((item, index) => {
+        if (item.sender === data.sender) {
+          sessionIndexes.push(index); // Write indexes of elements with matching sender
+        }
+      });
+      if (sessionIndexes.length > 0) {
+        // Delete all sessions with found indexes from the sessions array
+        sessionIndexes.forEach((index) => {
+          sessions.splice(index, 1);
+        });
+        const infoMessage = `Sessions of the sender '${data.sender}' were closed`;
+        logMessage(logType, infoMessage, 'success'); // Log the message about the closing of sessions
       }
     });
-  });
-  // Handling WebSocket errors
-  ws.on('error', (error) => {
-    const errorMessage = `WebSocket error: ${error}`;
-    logMessage(logType, errorMessage, 'error');
   });
 };
 
