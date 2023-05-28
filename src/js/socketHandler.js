@@ -40,7 +40,31 @@ const defineTable = (tableName) => {
 const handleSocketConnection = async (ws) => {
   // Event listener for the 'message' event of the WebSocket, invoked when a message is received
   ws.on('message', async (message) => {
-    const data = JSON.parse(message);
+    let data;
+    try {
+      data = JSON.parse(message);
+    } catch (error) {
+      // If an error occurred while parsing data
+      const errorMessage = `Error parsing JSON: ${error}`;
+      logMessage(logType, errorMessage, 'error');
+      return;
+    }
+
+    const existingSession = sessions.find(
+      (session) => session.sender === data.sender && session.receiver === data.receiver
+    );
+
+    // If no session for this dialog
+    if (existingSession === undefined) {
+      const newUser = {
+        sender: data.sender,
+        receiver: data.receiver,
+        ws: ws
+      };
+      sessions.push(newUser); // Adding the new user session to the sessions array
+      const infoMessage = `Session with sender: '${data.sender}' and receiver: '${data.receiver}' created`;
+      logMessage(logType, infoMessage, 'success'); // Logging the session creation message
+    }
 
     // If client send username
     if (typeof data === 'string') {
@@ -64,21 +88,6 @@ const handleSocketConnection = async (ws) => {
     }
     // Generating the table name for the chat
     const tableName = generateChatTableName(data.sender, data.receiver);
-    const existingSession = sessions.find(
-      (session) => session.sender === data.sender && session.receiver === data.receiver
-    );
-
-    // If no session for this dialog
-    if (existingSession === undefined) {
-      const newUser = {
-        sender: data.sender,
-        receiver: data.receiver,
-        ws: ws
-      };
-      sessions.push(newUser); // Adding the new user session to the sessions array
-      const infoMessage = `Session with sender: '${data.sender}' and receiver: '${data.receiver}' created`;
-      logMessage(logType, infoMessage, 'success'); // Logging the session creation message
-    }
 
     // If user sends info about current dialog
     if (!data.message) {
@@ -178,6 +187,11 @@ const handleSocketConnection = async (ws) => {
         logMessage(logType, infoMessage, 'success'); // Logging the session closing message
       }
     });
+  });
+  // Handling WebSocket errors
+  ws.on('error', (error) => {
+    const errorMessage = `WebSocket error: ${error}`;
+    logMessage(logType, errorMessage, 'error');
   });
 };
 
