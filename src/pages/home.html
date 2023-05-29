@@ -39,6 +39,9 @@
       let receiver;
       let currentDialog = null;
 
+      // Object to track unread messages per contact
+      let unreadMessages = {};
+
       // Update the page title with the sender's name
       const h1Element = document.getElementById('pageTitle');
       h1Element.innerText = `${sender}'s Homepage`;
@@ -89,11 +92,35 @@
           }
           // Handle messages from WebSocket session
           if (firstItem.hasOwnProperty('message')) {
+            console.log(`Message from: ${firstItem.sender}, message: ${firstItem.message}`);
             notifyNewMessage(firstItem.sender, firstItem.message);
+            
+            // Check if sender is a new contact
+            const contactsContainer = document.getElementById('contacts-container');
+            let isNewContact = true;
+            for(let i = 0; i < contactsContainer.children.length; i++){
+              if(contactsContainer.children[i].innerText === firstItem.sender){
+                isNewContact = false;
+                break;
+              }
+            }
+            
+            if(isNewContact){
+              addContact(firstItem.sender);
+            }
+
             // Check if the message belongs to the current dialog
             if (firstItem.sender !== currentDialog) {
+              if (unreadMessages[firstItem.sender]) {
+                unreadMessages[firstItem.sender] += 1;
+              } else {
+                unreadMessages[firstItem.sender] = 1;
+              }
+              // Update the button text to include the number of unread messages
+              document.getElementById(`contact_${firstItem.sender}`).innerText = `${firstItem.sender} (${unreadMessages[firstItem.sender]} unread)`;
               return;
             }
+
             data.forEach((item) => {
               const listItem = document.createElement('li');
               listItem.innerText = `${item.sender}: ${item.message}`;
@@ -101,6 +128,15 @@
             });
           }
         }
+      };
+
+      const addContact = (newContact) => {
+        const contactsContainer = document.getElementById('contacts-container');
+        const button = document.createElement('button');
+        button.id = `contact_${newContact}`;
+        button.innerText = newContact;
+        button.onclick = () => openDialog(newContact);
+        contactsContainer.appendChild(button);
       };
 
       // Function to open a dialog with a selected contact
@@ -117,6 +153,12 @@
         document.getElementById('chat').appendChild(chatDiv);
 
         receiver = selectedContact;
+
+        // Reset the unread messages counter for this contact
+        if (unreadMessages[selectedContact]) {
+          unreadMessages[selectedContact] = 0;
+        }
+        document.getElementById(`contact_${selectedContact}`).innerText = selectedContact;
 
         // Send a request to the WebSocket server to open the dialog
         const data = { sender: sender, receiver: selectedContact };
@@ -155,64 +197,51 @@
         const optionsArray = Array.from(options);
         optionsArray.forEach((option) => {
           const username = option.text.toLowerCase();
-          if (username.includes(filter)) {
-            option.style.display = '';
-          } else {
+          if (username.indexOf(filter) === -1) {
             option.style.display = 'none';
+          } else {
+            option.style.display = '';
           }
         });
       };
 
-      // Function to populate the user list in the dropdown
-      const populateUsersList = (data) => {
-        const userList = document.getElementById('userList');
-        userList.innerHTML = '<option value="" selected disabled>Select a user</option>';
+      // Function to populate the contacts list
+      const populateContactsList = (contacts) => {
+        const contactsContainer = document.getElementById('contacts-container');
+        contacts.forEach((contact) => {
+          addContact(contact);
+        });
+      };
 
-        data.forEach((item) => {
+      // Function to populate the users list
+      const populateUsersList = (users) => {
+        const userList = document.getElementById('userList');
+        users.forEach((user) => {
           const option = document.createElement('option');
-          option.value = item;
-          option.text = item;
+          option.value = user;
+          option.innerText = user;
           userList.appendChild(option);
         });
       };
 
-      // Function to populate the contacts list with buttons
-      const populateContactsList = (data) => {
-        const contactsContainer = document.getElementById('contacts-container');
-        contactsContainer.innerHTML = ''; // Clear the container
-
-        data.forEach((item) => {
-          const button = document.createElement('button');
-          button.innerText = item;
-          button.onclick = () => openDialog(item); // On click, open dialog with contact
-          contactsContainer.appendChild(button);
-        });
-      };
-
+      // Function to handle new messages
       const notifyNewMessage = (sender, message) => {
         const notificationSound = document.getElementById('notificationSound');
+        notificationSound.play();
 
-        // Show notification
-        if (!("Notification" in window)) {
-          console.log("This browser does not support notification");
-        } 
-
-        if (Notification.permission === "granted") {
-          new Notification(`New message from ${sender}`, { body: message });
-          notificationSound.play();
-        } 
-        
-        if (Notification.permission !== "denied") {
-          Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-              Notification.permission = permission;
-              new Notification(`New message from ${sender}`, { body: message });
-              notificationSound.play();
-            }
-          });
+        // Show a notification
+        if ('Notification' in window) {
+          if (Notification.permission === 'granted') {
+            const notification = new Notification(`${sender} sent a new message`, { body: message });
+          } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then((permission) => {
+              if (permission === 'granted') {
+                const notification = new Notification(`${sender} sent a new message`, { body: message });
+              }
+            });
+          }
         }
-      }
-
+      };
     </script>
   </body>
 </html>

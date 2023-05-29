@@ -141,6 +141,7 @@ const handleSocketConnection = async (ws) => {
       createNewSession(data.sender, ws);
       const DialogTable = defineTable(tableName);
       try {
+        await DialogTable.sync();
         await DialogTable.create({
           sender: data.sender,
           receiver: data.receiver,
