@@ -2,6 +2,11 @@
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
     username: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -29,6 +34,13 @@ module.exports = (sequelize, DataTypes) => {
         // Serialize and store a JSON array when setting a value to the database
         this.setDataValue('contacts', JSON.stringify(contacts));
       },
+      validate: {
+        notEmpty: true
+      }
+    },
+    notificationSoundStatus: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
       validate: {
         notEmpty: true
       }

@@ -75,25 +75,42 @@ const handleSocketConnection = async (ws) => {
     }
 
     // If client send username
-    if (typeof data === 'string') {
+    if ('username' in data) {
       try {
-        const sender = data;
+        const sender = data.username;
         currentUser = sender;
-        // Send all users
+        // Find all users
         const users = await User.findAll({ where: { username: { [Op.ne]: sender } } });
         const usernames = users.map(user => user.username);
-        // Send user's contacts
+        // Find user's contacts
         const user = await User.findOne({ where: { username: sender } });
         const userContacts = user.contacts || [];
+        // Find user's notification sound status
+        const notificationSoundStatus = user.notificationSoundStatus;
         // Create Web Socket session
         createNewSession(sender, ws);
         ws.send(JSON.stringify({
           users: usernames,
-          contacts: userContacts
+          contacts: userContacts,
+          notificationSoundStatus
         }));
         return;
       } catch (error) {
         const errorMessage = `Can't fetch the user data: ${error}`;
+        logMessage(logType, errorMessage, 'error'); // Logging the error message
+      }
+    }
+
+    // If client send notification sound status
+    if ('notificationSoundStatus' in data) {
+      try {
+        const username = currentUser;
+        const user = await User.findOne({ where: { username } });
+        user.setDataValue('notificationSoundStatus', data.notificationSoundStatus);
+        await user.save();
+        return;
+      } catch (error) {
+        const errorMessage = `Can't fetch notification sound status: ${error}`;
         logMessage(logType, errorMessage, 'error'); // Logging the error message
       }
     }

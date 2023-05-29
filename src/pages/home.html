@@ -7,6 +7,8 @@
   <body>
     <!-- Notification sound -->
     <audio id="notificationSound" src="/sounds/notification.mp3" preload="auto"></audio>
+    <!-- Button to toggle notification sound -->
+    <button id="notificationSwitcher" type="button" onclick="notificationSwitch()">Sound On</button>
     <!-- Page structure -->
     <h1 id="pageTitle">Chat</h1>
     <div id="contacts-title">Your contacts:</div>
@@ -63,7 +65,7 @@
 
       ws.onopen = () => {
         console.log('WebSocket connection established');
-        ws.send(JSON.stringify(sender));
+        ws.send(JSON.stringify({username: sender}));
       };
 
       ws.onmessage = (event) => {
@@ -72,6 +74,13 @@
         if (data.hasOwnProperty('contacts')) {
           populateContactsList(data.contacts);
           populateUsersList(data.users);
+          notificationSound.muted = data.notificationSoundStatus;
+          const notificationSwitcher = document.getElementById('notificationSwitcher');
+          if (notificationSound.muted === false) {
+            notificationSwitcher.innerText = 'Sound Off';
+          } else {
+            notificationSwitcher.innerText = 'Sound On';
+          }
         }
 
         // Check if the received data is empty
@@ -176,18 +185,18 @@
 
           // Check if reciver user is already in our contacts
           const contactsContainer = document.getElementById('contacts-container');
-            let isNewContact = true;
-            for (let i = 0; i < contactsContainer.children.length; i++) {
-              if (contactsContainer.children[i].innerText === receiver) {
-                isNewContact = false;
-                break;
-              }
-            }
-
-            if (isNewContact) {
-              addContact(receiver);
+          let isNewContact = true;
+          for (let i = 0; i < contactsContainer.children.length; i++) {
+            if (contactsContainer.children[i].innerText === receiver) {
               isNewContact = false;
+              break;
             }
+          }
+
+          if (isNewContact) {
+            addContact(receiver);
+            isNewContact = false;
+          }
           console.log(`message: ${message}, receiver: ${receiver}, sender: ${sender}`);
         } else {
           const error = 'Error: There is no message or receiver';
@@ -249,6 +258,20 @@
             });
           }
         }
+      };
+
+      // Function to toggle notification sound
+      const notificationSwitch = () => {
+        const notificationSound = document.getElementById('notificationSound');
+        const notificationSwitcher = document.getElementById('notificationSwitcher');
+        if (notificationSound.muted) {
+          notificationSound.muted = false;
+          notificationSwitcher.innerText = 'Sound Off';
+        } else {
+          notificationSound.muted = true;
+          notificationSwitcher.innerText = 'Sound On';
+        }
+        ws.send(JSON.stringify({notificationSoundStatus: notificationSound.muted}));
       };
     </script>
   </body>
