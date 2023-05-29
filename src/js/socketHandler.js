@@ -36,19 +36,18 @@ const defineTable = (tableName) => {
   });
 };
 
-const createNewSession = (sender, receiver, ws) => {
+const createNewSession = (sender, ws) => {
   const contactSession = sessions.find(
-    (session) => (session.sender === sender && session.receiver === receiver)
+    (session) => (session.sender === sender)
   );
   if (!contactSession) {
-    if (sender && receiver) {
+    if (sender) {
       const newUser = {
         sender: sender,
-        receiver: receiver,
         ws: ws
       };
       sessions.push(newUser); // Adding the new user session to the sessions array
-      const infoMessage = `Session for users: '${newUser.sender}' and '${newUser.receiver}' created`;
+      const infoMessage = `Session for users: '${newUser.sender}' created`;
       logMessage(logType, infoMessage, 'success'); // Logging the session creation message
     } else {
       const errorMessage = 'There are no receiver or sender for creating new session';
@@ -61,8 +60,10 @@ const createNewSession = (sender, receiver, ws) => {
 
 // Function to handle WebSocket connection
 const handleSocketConnection = async (ws) => {
+  let currentUser;
   // Event listener for the 'message' event of the WebSocket, invoked when a message is received
   ws.on('message', async (message) => {
+    // Parse data from client
     let data;
     try {
       data = JSON.parse(message);
@@ -77,16 +78,15 @@ const handleSocketConnection = async (ws) => {
     if (typeof data === 'string') {
       try {
         const sender = data;
+        currentUser = sender;
         // Send all users
         const users = await User.findAll({ where: { username: { [Op.ne]: sender } } });
         const usernames = users.map(user => user.username);
         // Send user's contacts
         const user = await User.findOne({ where: { username: sender } });
         const userContacts = user.contacts || [];
-        // Create Web Socket session for each contact
-        userContacts.forEach((contact) => {
-          createNewSession(sender, contact, ws);
-        });
+        // Create Web Socket session
+        createNewSession(sender, ws);
         ws.send(JSON.stringify({
           users: usernames,
           contacts: userContacts
@@ -110,7 +110,7 @@ const handleSocketConnection = async (ws) => {
       const count = suitableTables.length;
       const DialogTable = defineTable(tableName);
 
-      // If table for current dialog alrady exists
+      // If table for current dialog not exists
       if (count === 0) {
         try {
           await DialogTable.sync(); // Creating the chat table if it doesn't exist
@@ -138,7 +138,7 @@ const handleSocketConnection = async (ws) => {
 
     // If user sends message
     if (data.message) {
-      createNewSession(data.sender, data.receiver, ws);
+      createNewSession(data.sender, ws);
       const DialogTable = defineTable(tableName);
       try {
         await DialogTable.create({
@@ -161,7 +161,6 @@ const handleSocketConnection = async (ws) => {
         // Find sender and receiver users
         addContact(data.sender, data.receiver);
         addContact(data.receiver, data.sender);
-
         const infoMessage = `Send message from ${data.sender} to ${data.receiver}`;
         logMessage(logType, infoMessage, 'success'); // Logging sending message
       } catch (error) {
@@ -172,7 +171,7 @@ const handleSocketConnection = async (ws) => {
 
     // Send data to receiver if he online
     const receiverUser = sessions.find(
-      (item) => (item.sender === data.receiver && item.receiver === data.sender)
+      (item) => (item.sender === data.receiver)
     );
     if (
       receiverUser !== undefined
@@ -187,23 +186,15 @@ const handleSocketConnection = async (ws) => {
         receiverUser.ws.send(JSON.stringify([senderMessage]));
       }
     }
-    // Close event of the WebSocket, invoked when the WebSocket connection is closed
-    ws.on('close', () => {
-      const sessionIndexes = [];
-      sessions.forEach((item, index) => {
-        if (item.sender === data.sender) {
-          sessionIndexes.push(index); // Write indexes of elements with matching sender
-        }
-      });
-      if (sessionIndexes.length > 0) {
-        // Delete all sessions with found indexes from the sessions array
-        sessionIndexes.forEach((index) => {
-          sessions.splice(index, 1);
-        });
-        const infoMessage = `Sessions of the sender '${data.sender}' were closed`;
-        logMessage(logType, infoMessage, 'success'); // Log the message about the closing of sessions
-      }
-    });
+  });
+  // Close event of the WebSocket, invoked when the WebSocket connection is closed
+  ws.on('close', () => {
+    const contactSessionIndex = sessions.findIndex(
+      (session) => (session.sender === currentUser)
+    );
+    sessions.splice(contactSessionIndex, 1);
+    const infoMessage = `Session of the sender '${currentUser}' was closed`;
+    logMessage(logType, infoMessage, 'success'); // Log the message about the closing of sessions
   });
 };
 
