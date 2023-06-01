@@ -74,9 +74,13 @@ exports.loginUser = async (req, res) => {
 };
 
 exports.registerUser = async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) { // If username or password is missing
+  const { username, password, repeatPassword } = req.body;
+  if (!username || !password || !repeatPassword) { // If username or password is missing
     return res.send('Please enter both Username and Password!');
+  }
+
+  if (repeatPassword !== password) { // If username or password is missing
+    return res.send('Password is not equal to the repeated password');
   }
 
   try {
