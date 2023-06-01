@@ -1,15 +1,34 @@
 <!DOCTYPE html>
-<html manifest="/manifest.appcache">
-  <head>
-    <title>Converso Chat</title>
-    <link rel="stylesheet" href="/style.css" type="text/css"/>
-  </head>
-  <body>
-    <h1>Registration Page</h1>
-    <form action="/register" method="POST">
-      <input type="text" name="username" placeholder="Username" required/>
-      <input type="password" name="password" placeholder="Password" required/>
-      <button type="submit">Register</button>
-    </form>
-  </body>
+<html lang="en">
+<head>
+  <title>Converso Chat</title>
+  <link rel="stylesheet" href="styles/authStyle.css" type="text/css"/>
+</head>
+<body>
+    <section>
+        <div class="form-box">
+            <div class="form-value">
+                <form action="/register" method="POST">
+                    <h2>Registration</h2>
+                    <div class="inputbox">
+                        <input type="text" name="username" required>
+                        <label for="">Username</label>
+                    </div>
+                    <div class="inputbox">
+                        <input type="password" name="password" required>
+                        <label for="">Password</label>
+                    </div>
+                    <div class="inputbox">
+                      <input type="password" name="repeatPassword" required>
+                      <label for="">Repeat password</label>
+                    </div>
+                    <button type="submit">Sign up</button>
+                    <div class="switchPages">
+                      <p><a href="/login">I already have an account</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
 </html>
