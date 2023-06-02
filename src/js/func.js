@@ -4,7 +4,7 @@ const getCurrentTime = () => {
   return new Date().toLocaleString();
 };
 
-const logMessage = (logType, message, type) => {
+exports.logMessage = (logType, message, type) => {
   const colors = {
     success: '\x1b[32m', // Green
     error: '\x1b[31m', // Red
@@ -23,13 +23,13 @@ const logMessage = (logType, message, type) => {
   }
 };
 
-const generateChatTableName = (firstUsername, secondUsername) => {
+exports.generateChatTableName = (firstUsername, secondUsername) => {
   const sortedUsers = [firstUsername, secondUsername].sort(); // Sort usernames by code
   const tableName = `chat_for_${sortedUsers[0]}_${sortedUsers[1]}_users`; // Create a table title
   return tableName;
 };
 
-const passwordСheck = (password) =>{
+exports.passwordСheck = (password) => {
   // Check password length
   const minLength = 8;
   const maxLength = 16;
@@ -51,4 +51,7 @@ const passwordСheck = (password) =>{
   return true;
 };
 
-module.exports = { logMessage, generateChatTableName, passwordСheck };
+exports.usernameСheck = (username) => {
+  const regex = /^[a-zA-Z]{8,}$/;
+  return regex.test(username);
+};

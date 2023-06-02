@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
     contacts: {
       type: DataTypes.TEXT, // Changed data type to TEXT
       allowNull: false,
-      defaultValue: '[]', // Set the default value to an empty JSON array
+      defaultValue: '[]', // Set the default value to an empty array
       get() {
         // Parse stored JSON array when reading value from database
         const contacts = this.getDataValue('contacts');
