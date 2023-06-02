@@ -3,7 +3,7 @@
 const path = require('path');
 const { User } = require('../../models');
 const bcrypt = require('bcrypt');
-const { logMessage } = require('./func.js');
+const { logMessage, passwordСheck } = require('./func.js');
 const logType = 'CONTROLLER';
 
 exports.getWelcomePage = (req, res) => {
@@ -74,9 +74,17 @@ exports.loginUser = async (req, res) => {
 };
 
 exports.registerUser = async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) { // If username or password is missing
+  const { username, password, repeatPassword } = req.body;
+  if (!username || !password || !repeatPassword) { // If username or password is missing
     return res.send('Please enter both Username and Password!');
+  }
+
+  if (!passwordСheck(password)) {
+    return res.send('Password length should be at least 8 characters.\nPassword should include a combination of uppercase and lowercase letters.\nPassword should contain only Latin letters and numbers.');
+  }
+
+  if (repeatPassword !== password) { // If username or password is missing
+    return res.send('Password is not equal to the repeated password');
   }
 
   try {
