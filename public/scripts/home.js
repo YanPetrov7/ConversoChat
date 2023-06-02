@@ -67,11 +67,13 @@ ws.onmessage = (event) => {
   if (typeof firstItem === 'object') {
     // Handle history items
     if (firstItem.hasOwnProperty('history')) {
+      let messageList = document.getElementById('messageList');
       data.forEach((item) => {
-        const listItem = document.createElement('li');
-        listItem.innerText = `${item.sender}: ${item.history}`;
+        const listItem = getListItem(item.sender, item.history)
         document.getElementById('messageList').appendChild(listItem);
       });
+      // Set scrollbar to the lowest position
+      messageList.scrollTop = messageList.scrollHeight;
     }
     // Handle messages from WebSocket session
     if (firstItem.hasOwnProperty('message')) {
@@ -101,8 +103,7 @@ ws.onmessage = (event) => {
       }
 
       data.forEach((item) => {
-        const listItem = document.createElement('li');
-        listItem.innerText = `${item.sender}: ${item.message}`;
+        const listItem = getListItem(item.sender, item.message)
         document.getElementById('messageList').appendChild(listItem);
       });
     }
@@ -120,26 +121,14 @@ const addContact = (newContact) => {
 
 // Function to open a dialog with a selected contact
 const openDialog = (selectedContact) => {
-  const parentChatDiv = document.getElementById('chat');
   // Clear the message list
   document.getElementById('messageList').innerHTML = '';
 
   // Update the current dialog and chat section
   currentDialog = selectedContact;
-  document.getElementById('chat').innerHTML = '';
-
-  const chatDiv = createDivInOtherDiv(parentChatDiv, selectedContact);
-  document.getElementById('chat').appendChild(chatDiv);
-
+  document.getElementById('dialogTitle').innerText = `Dialog with: ${selectedContact}`;
+  
   receiver = selectedContact;
-
-  // Reset the unread messages counter for this contact
-  if (unreadMessages[selectedContact]) {
-    unreadMessages[selectedContact] = 0;
-  }
-  document.getElementById(`contact_${selectedContact}`).innerText =
-    selectedContact;
-
   // Send a request to the WebSocket server to open the dialog
   const data = {sender: sender, receiver: selectedContact};
   ws.send(JSON.stringify(data));
@@ -152,8 +141,7 @@ const sendMessage = () => {
 
   // Check if there is a message and receiver specified
   if (message && receiver) {
-    const listItem = document.createElement('li');
-    listItem.innerText = `${sender}: ${message}`;
+    const listItem = getListItem(sender, message)
     document.getElementById('messageList').appendChild(listItem);
 
     // Send the message to the WebSocket server
@@ -177,6 +165,7 @@ const sendMessage = () => {
     console.log(
       `message: ${message}, receiver: ${receiver}, sender: ${sender}`
     );
+    document.getElementById('msg').value = '';
   } else {
     const error = 'Error: There is no message or receiver';
     alert(error);
@@ -257,3 +246,18 @@ const notificationSwitch = () => {
   }
   ws.send(JSON.stringify({ notificationSoundStatus: notificationSound.muted }));
 };
+
+// Write message to message window
+const getListItem = (messageSender, message) => {
+  const listItem = document.createElement('li');
+  const senderElement = document.createElement('span');
+  senderElement.innerText = messageSender;
+  if (messageSender !== sender) {
+    senderElement.style.color = 'blue';
+  } else {
+    senderElement.style.color = 'red';
+  }
+  listItem.appendChild(senderElement);
+  listItem.innerHTML += `: ${message}`;
+  return listItem;
+}

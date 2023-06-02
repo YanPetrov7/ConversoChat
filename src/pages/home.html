@@ -2,34 +2,60 @@
 <html manifest="/manifest.appcache">
   <head>
     <title>Converso Chat</title>
-    <link rel="stylesheet" href="styles/style.css" type="text/css" />
+    <link rel="stylesheet" href="styles/homeStyle.css" type="text/css"/>
+    <link rel="icon" type="image/png" href="img/main_logo.png">
   </head>
   <body>
     <!-- Notification sound -->
     <audio id="notificationSound" src="/sounds/notification.mp3" preload="auto"></audio>
-    <!-- Page Title -->
-    <h1 id="pageTitle">Chat</h1>
-    <!-- Button to toggle notification sound -->
-    <button id="notificationSwitcher" type="button" onclick="notificationSwitch()">Sound On</button>
+    <!-- Page Toolbar -->
+    <header>
+      <h1 id="pageTitle">Chat</h1>
+      <div id="pageLogo"><img src="img/logo.png" alt="logo" class="logo"></div>
+      <nav>
+        <a class="toolbar-item"><button id="notificationSwitcher" type="button" onclick="notificationSwitch()">Sound On</button></a>
+        <a class="toolbar-item"><button id="logoutButton" type="button" onclick="location.href='/logout'">Log out</button></a> 
+      </nav>
+    </header>
     <!-- Page structure -->
-    <div id="contacts-title">Your contacts:</div>
-    <div id="contacts-container"></div>
-    <div id="userList-title">Find user:</div>
-    <select id="userList" onchange="openDialog(this.value)">
-      <option value="" selected disabled>Select a user</option>
-    </select>
-    <input type="text" id="userSearch" oninput="searchUsers()" placeholder="Search by name">
-    <h2 id="dialogTitle">Dialog with:</h2>
-    <div id="chat"></div>
-
-    <!-- Input field and button for sending messages -->
-    <input type="text" id="msg" />
-    <button type="button" onclick="sendMessage()">Send</button>
-
-    <!-- Container for displaying messages -->
-    <ul id="messageList"></ul>
-
-    <a href="/logout">Logout</a>
+    <div class="content">
+      <div class="navigation">
+        <div class="navigation-item">
+          <div id="userList-title">Find user:</div>
+        </div>
+        <div class="navigation-item">
+          <div class="userSearch">
+            <input type="text" name="username" id="userSearch" oninput="searchUsers()" required>
+            <label for="">Search by name</label>
+          </div>
+        </div>
+        <div class="navigation-item">
+          <select id="userList" onchange="openDialog(this.value)">
+            <option value="" selected disabled>Select a user</option>
+          </select>
+        </div>
+        <div class="navigation-item">
+          <div id="contacts-title">Your contacts:</div>
+        </div>
+        <div class="navigation-item">
+          <div id="contacts-container"></div>
+        </div>
+      </div>
+      <div class="messaging">
+        <div class="messaging-title">
+          <h2 id="dialogTitle">Dialog with:</h2>
+        </div>
+        <!-- Container for displaying messages -->
+        <div id="notificationWindow" class="notification-window">
+          <ul id="messageList"></ul>
+          <!-- Input field and button for sending messages -->
+        </div>
+        <div class="sendingMessages">
+          <textarea type="text" id="msg"></textarea>
+          <button type="button" onclick="sendMessage()"><img src="/img/send_message.png" alt="icon" class="send_message"></button>
+        </div>
+      </div>
+    </div>
     <script src="/scripts/home.js"></script>
   </body>
 </html>
