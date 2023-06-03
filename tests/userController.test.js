@@ -18,6 +18,7 @@ app.use(
   })
 );
 
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -36,6 +37,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use('/', routes);
+
+beforeAll(async () => {
+  // Create data table and apply migrations
+  await sequelize.sync();
+});
 
 afterAll(async () => {
   await sequelize.close();
