@@ -10,20 +10,6 @@ const { sequelize } = require('../models')
 
 const app = express();
 
-app.use(
-  session({
-    secret: 'secretkey',
-    resave: true,
-    saveUninitialized: true
-  })
-);
-
-
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
-app.use('/', routes);
-
 // Middleware setup
 app.use(
   session({
