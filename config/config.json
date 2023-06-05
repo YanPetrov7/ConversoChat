@@ -1,9 +1,9 @@
 {
   "development": {
     "username": "root",
-    "password": "wiYb&BLll3P,",
+    "password": "wiYb&BLll3P",
     "database": "converso_chat",
-    "host": "localhost",
+    "host": "mysql_db",
     "dialect": "mysql"
   },
   "test": {
