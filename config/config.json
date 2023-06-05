@@ -1,23 +1,16 @@
 {
   "development": {
     "username": "root",
-    "password": "wiYb&BLll3P",
+    "password": "test1234",
     "database": "converso_chat",
     "host": "mysql_db",
     "dialect": "mysql"
   },
   "test": {
     "username": "root",
-    "password": "wiYb&BLll3P,",
+    "password": "test1234",
     "database": "converso_chat_test",
-    "host": "localhost",
-    "dialect": "mysql"
-  },
-  "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
+    "host": "mysql_db_test",
     "dialect": "mysql"
   }
 }
