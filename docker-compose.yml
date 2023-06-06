@@ -30,8 +30,8 @@ services:
     environment:
       MYSQL_DATABASE: converso_chat_test
       MYSQL_USER: test_user
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_TEST_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_TEST_PASSWORD: ${DB_PASSWORD}
       SERVICE_NAME: mysql_db_test
 
   app:
@@ -48,6 +48,7 @@ services:
     environment:
       - DATABASE_HOST=mysql_db
       - TEST_DATABASE_HOST=mysql_db_test
+    
 
 volumes:
   db_data: {}

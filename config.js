@@ -1,6 +1,7 @@
 /* eslint-disable */
+require('dotenv').config();
 
-module.export = {
+module.exports = {
   "development": {
     "username": "root",
     "password": process.env.DB_PASSWORD,
@@ -10,7 +11,7 @@ module.export = {
   },
   "test": {
     "username": "root",
-    "password": process.env.TEST_DB_PASSWORD,
+    "password": process.env.DB_PASSWORD,
     "database": "converso_chat_test",
     "host": "mysql_db_test",
     "dialect": "mysql"
