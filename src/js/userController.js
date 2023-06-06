@@ -44,60 +44,79 @@ exports.getHomePage = (req, res) => {
 exports.loginUser = async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
-    return res.status(400).send('Please enter both Username and Password!');
+    const errorCode = 400;
+    const errorMessage = 'Please enter both Username and Password!';
+    return res.status(errorCode).send(errorMessage);
   }
 
   try {
     const user = await User.findOne({ where: { username } }); // Finding the user by username
     if (!user) { // If user does not exist
+      const errorCode = 404;
       const errorMessage = `No user with name: '${username}'`;
+
       logMessage(logType, errorMessage, 'error');
-      return res.status(404).send(errorMessage);
+      return res.status(errorCode).send(errorMessage);
     }
 
     const result = await bcrypt.compare(password, user.password);
     if (result) { // If password matches
       req.session.loggedin = true;
       req.session.username = username;
+
+      const redirectCode = 302;
       const infoMessage = `User with username: '${username}' is logging in`;
+
       logMessage(logType, infoMessage, 'success'); // Logging succsessful login message
-      return res.redirect(302, `/home?user=${username}`);
+      return res.redirect(redirectCode, `/home?user=${username}`);
     }
+    const errorCode = 401;
     const errorMessage = `Invalid password for User: '${username}'`;
+
     logMessage(logType, errorMessage, 'error'); // Logging error, invalid password message
-    return res.status(401).send(errorMessage);
+    return res.status(errorCode).send(errorMessage);
   } catch (err) {
+    const errorCode = 401;
     const errorMessage = `Error occurred while logging in: ${err.message}`;
     logMessage(logType, errorMessage, 'error'); // Logging error while logging in
-    return res.status(500).send(errorMessage);
+    return res.status(errorCode).send(errorMessage);
   }
 };
 
 exports.registerUser = async (req, res) => {
   const { username, password, repeatedPassword } = req.body;
   if (!username || !password || !repeatedPassword) { // If username or password is missing
-    return res.status(400).send('Please enter username, password and repeated password!');
+    const errorCode = 400;
+    const errorMessage = 'Please enter username, password and repeated password!';
+    return res.status(errorCode).send(errorMessage);
   }
 
   if (!usernameСheck(username)) {
-    return res.status(401).send('Username length should be: at least 5 characters, contain only Latin letters and numbers');
+    const errorCode = 401;
+    const errorMessage = 'Username length should be: at least 5 characters, contain only Latin letters and numbers';
+    return res.status(errorCode).send(errorMessage);
   }
 
   if (!passwordСheck(password)) {
-    return res.status(402).send('Password length should be: at least 8 characters, include a combination of uppercase and lowercase letters, contain only Latin letters and numbers.');
+    const errorCode = 402;
+    const errorMessage = 'Password length should be: at least 8 characters, include a combination of uppercase and lowercase letters, contain only Latin letters and numbers.';
+    return res.status(errorCode).send(errorMessage);
   }
 
   if (repeatedPassword !== password) { // If username or password is missing
-    return res.status(403).send('Password is not equal to the repeated password');
+    const errorCode = 403;
+    const errorMessage = 'Password is not equal to the repeated password';
+    return res.status(errorCode).send(errorMessage);
   }
 
   try {
     // Checking if user already exists
     const existingUser = await User.findOne({ where: { username } });
     if (existingUser) { // If user already exists
+      const errorCode = 404;
       const errorMessage = `User with username: '${username}' already exists`;
       logMessage(logType, errorMessage, 'error'); // Logging error, user already exists
-      return res.status(404).send(errorMessage);
+      return res.status(errorCode).send(errorMessage);
     }
 
     const hash = await bcrypt.hash(password, 10);
@@ -105,13 +124,15 @@ exports.registerUser = async (req, res) => {
     req.session.username = username;
     await User.create({ username, password: hash });
 
+    const redirectCode = 302;
     const infoMessage = `Created user with name ${username}`;
     logMessage(logType, infoMessage, 'success'); // Logging succsessful login message
-    return res.redirect(302, `/home?user=${username}`);
+    return res.redirect(redirectCode, `/home?user=${username}`);
   } catch (err) {
+    const errorCode = 500;
     const errorMessage = `Error occurred while registering user: ${err.message}`;
     logMessage(logType, errorMessage, 'error'); // Logging error while registering user
-    return res.status(500).send(errorMessage);
+    return res.status(errorCode).send(errorMessage);
   }
 };
 
