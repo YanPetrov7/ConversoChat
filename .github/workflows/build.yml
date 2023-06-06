@@ -1,0 +1,30 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      TEST_DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Test secrets
+      run: echo $DB_PASSWORD
+      
+    - name: Build and run tests
+      run: |
+        docker-compose -f docker-compose.yml up -d mysql_db mysql_db_test
+        sleep 10 # wait for 10 seconds
+        docker-compose -p conversochat logs
+        
+        docker-compose -p conversochat run app npm test
