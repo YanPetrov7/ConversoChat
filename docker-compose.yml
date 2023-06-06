@@ -48,7 +48,7 @@ services:
     environment:
       - DATABASE_HOST=mysql_db
       - TEST_DATABASE_HOST=mysql_db_test
+      - DB_PASSWORD=${DB_PASSWORD}
     
-
 volumes:
   db_data: {}
