@@ -35,6 +35,10 @@ exports.getRegisterPage = (req, res) => {
 
 exports.getHomePage = (req, res) => {
   if (req.session.loggedin) {
+    if (!req.query.user || req.query.user !== req.session.username) {
+      const username = req.session.username;
+      return res.redirect(302, `/home?user=${username}`);
+    }
     const filePath = path.join(__dirname, '../pages/home.html');
     return res.sendFile(filePath);
   }
