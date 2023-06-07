@@ -18,7 +18,7 @@ let unreadMessages = {};
 
 // Update the page title with the sender's name
 const h1Element = document.getElementById('pageTitle');
-h1Element.innerText = `${sender}'s Homepage`;
+h1Element.innerText = `${sender}`;
 
 // Function to create a chat div for another div
 const createDivInOtherDiv = (parentDiv, childDivId, childDivName) => {
