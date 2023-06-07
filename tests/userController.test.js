@@ -42,6 +42,46 @@ afterEach(async () => {
 // Test suite for the 'userController'
 describe('userController', () => {
 
+  // Test suite for the 'getHomePage' function
+  describe('getHomePage', () => {
+    // Test case: Should redirect to the login page if the user is not logged in
+    test('should redirect to the login page if the user is not logged in', async () => {
+      const response = await request(app).get('/home');
+  
+      expect(response.statusCode).toBe(302);
+      expect(response.headers.location).toBe('/');
+    });
+
+    // Test case: Should redirect to the home page of correct user with the incorect username parameter
+    test('should redirect to the home page of correct user with the incorect username parameter', async () => {
+      // Set up the logged in user session
+      const loggedInUser = 'testUser';
+      const loggedInUserPassword = 'testPassword';
+      const agent = request.agent(app);
+
+      await agent.post('/register').send({ username: loggedInUser, password: loggedInUserPassword, repeatedPassword: loggedInUserPassword });
+      
+      const response = await agent.get(`/home?user=incorrectUser`);
+  
+      expect(response.statusCode).toBe(302);
+      expect(response.headers.location).toBe(`/home?user=${loggedInUser}`);
+    });
+
+    // Test case: Should redirect to the home page with the user parameter if the user is logged in
+    test('should redirect to the home page with the user parameter if the user is logged in', async () => {
+      // Set up the logged in user session
+      const loggedInUser = 'testUser';
+      const loggedInUserPassword = 'testPassword';
+      const agent = request.agent(app);
+      await agent.post('/register').send({ username: loggedInUser, password: loggedInUserPassword, repeatedPassword: loggedInUserPassword });
+      
+      const response = await agent.get(`/home`);
+  
+      expect(response.statusCode).toBe(302);
+      expect(response.headers.location).toBe(`/home?user=${loggedInUser}`);
+    });
+  });
+
   // Test suite for the 'login' function
   describe('login', () => {
     // Test case: Should send an error message if username or password is missing
