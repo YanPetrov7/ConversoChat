@@ -20,7 +20,7 @@ const defineTable = (tableName) => {
       allowNull: false
     },
     message: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(2000),
       allowNull: false
     },
     createdAt: {

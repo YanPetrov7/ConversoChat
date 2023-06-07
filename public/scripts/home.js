@@ -158,6 +158,11 @@ const sendMessage = () => {
 
     // Check if there is a message and receiver specified
     if (message && receiver) {
+      const maxLength = 2000;
+      if(message.length > maxLength) {
+        const errorMessage = `Message should be less than ${maxLength} chars length`;
+        return alert(errorMessage);
+      }
       const listItem = getListItem(sender, message)
       document.getElementById('messageList').appendChild(listItem);
 
