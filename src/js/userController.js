@@ -97,7 +97,7 @@ exports.registerUser = async (req, res) => {
 
   if (!usernameСheck(username)) {
     const errorCode = 401;
-    const errorMessage = 'Username length should be: at least 5 characters, contain only Latin letters and numbers';
+    const errorMessage = 'Username length should be: at least 8 characters, contain only Latin letters and numbers';
     return res.status(errorCode).send(errorMessage);
   }
 

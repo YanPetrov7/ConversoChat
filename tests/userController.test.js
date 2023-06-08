@@ -144,7 +144,7 @@ describe('userController', () => {
       });
   
       expect(response.statusCode).toBe(401);
-      expect(response.text).toBe('Username length should be: at least 5 characters, contain only Latin letters and numbers');
+      expect(response.text).toBe('Username length should be: at least 8 characters, contain only Latin letters and numbers');
     });
   
     // Test case: Should send an error message if password is not valid
